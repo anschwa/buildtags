@@ -1,0 +1,73 @@
+#+TITLE: Using Build Tags in Go
+#+AUTHOR: Adam Schwartz
+#+DATE: August 22, 2019
+#+OPTIONS: ':true *:true toc:nil num:nil
+
+Go lets you set build tags to customize how your program gets compiled
+and linked. We can use this to launch a different version of our
+application depending on our environment.
+
+For example, this can be useful if you wanted to launch a web server
+during local development but ultimately deploy your app as a
+Serverless Function.
+
+This is =main.go=:
+#+BEGIN_SRC go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello Prod Build")
+}
+#+END_SRC
+
+And this is =main.dev.go=:
+#+BEGIN_SRC go
+// +build dev
+
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello Dev Build")
+}
+#+END_SRC
+
+Building our app for production is like normal:
+#+BEGIN_SRC text
+$ go build
+$ ./buildtags
+> Hello Prod Build
+#+END_SRC
+
+Running in development is a little different:
+#+BEGIN_SRC text
+$ go run -tags dev main.dev.go
+$ ./buildtags
+> Hello Dev Build
+#+END_SRC
+
+Alternatively, you could flip this around and set =+build prod= in
+=main.prod.go=. Then you could build for production like this:
+#+BEGIN_SRC text
+$ go build -tags prod -o app main.prod.go
+$ ./app
+> Hello Prod Build
+#+END_SRC
+
+Furthermore, you can pass the =-tags= option to =go test= as well, but
+when using build tags in =package main= you might end up with a conflict:
+#+BEGIN_SRC text
+go test -tags dev
+./main.go:5:6: main redeclared in this block
+    previous declaration at ./main.dev.go:7:6
+#+END_SRC
+
+To avoid this, you could run a specific test file, or set =+build
+!dev= in =main.go=.
+
+Ultimately, you can setup the build tags to accommodate for what you
+would like the default behavior of the =go= commands to be while still
+providing a mechanism to satisfy a variety of environments.
